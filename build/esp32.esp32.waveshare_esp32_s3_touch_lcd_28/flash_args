@@ -1,0 +1,5 @@
+--flash-mode dio --flash-freq 80m --flash-size 16MB  
+0x0 bambu_dashboard_v2.ino.bootloader.bin  
+0x8000 bambu_dashboard_v2.ino.partitions.bin  
+0xe000 boot_app0.bin  
+0x10000 bambu_dashboard_v2.ino.bin 
