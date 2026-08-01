@@ -44,7 +44,7 @@ void setup()
     randomSeed(micros());
 
     lcd.init();
-    lcd.setRotation(1);
+    lcd.setRotation(3);
     lcd.setBrightness(255);
     initSleepManager();
 
