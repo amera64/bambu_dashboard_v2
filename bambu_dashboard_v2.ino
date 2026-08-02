@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 
 #include "PrinterData.h"
 #include "LGFX_Config.h"
@@ -28,6 +29,92 @@ String printerState = "ONLINE";
 
 volatile bool displayWakeRequested = false;
 
+
+void setupOTA()
+{
+    ArduinoOTA.setHostname("bambu-display");
+
+    // Optional but strongly recommended
+    ArduinoOTA.setPassword("malibu2515");
+
+    ArduinoOTA.onStart([]()
+    {
+        Serial.println("OTA update starting");
+
+        // Keep the display awake during the update
+        requestScreenWake();
+
+        lcd.fillScreen(TFT_BLACK);
+        lcd.setTextDatum(middle_center);
+        lcd.setFont(&fonts::Font2);
+        lcd.setTextColor(TFT_WHITE);
+        lcd.drawString(
+            "UPDATING FIRMWARE",
+            lcd.width() / 2,
+            lcd.height() / 2 - 10
+        );
+    });
+
+    ArduinoOTA.onProgress([](
+        unsigned int progress,
+        unsigned int total)
+    {
+        const int percent =
+            static_cast<int>(
+                (progress * 100ULL) / total
+            );
+
+        lcd.fillRect(
+            80,
+            lcd.height() / 2 + 10,
+            160,
+            25,
+            TFT_BLACK
+        );
+
+        lcd.setTextDatum(middle_center);
+        lcd.setTextColor(TFT_WHITE);
+        lcd.drawString(
+            String(percent) + "%",
+            lcd.width() / 2,
+            lcd.height() / 2 + 20
+        );
+    });
+
+    ArduinoOTA.onEnd([]()
+    {
+        Serial.println("OTA update complete");
+
+        lcd.fillScreen(TFT_BLACK);
+        lcd.setTextDatum(middle_center);
+        lcd.setTextColor(TFT_GREEN);
+        lcd.drawString(
+            "UPDATE COMPLETE",
+            lcd.width() / 2,
+            lcd.height() / 2
+        );
+    });
+
+    ArduinoOTA.onError([](ota_error_t error)
+    {
+        Serial.print("OTA error: ");
+        Serial.println(error);
+
+        lcd.fillScreen(TFT_BLACK);
+        lcd.setTextDatum(middle_center);
+        lcd.setTextColor(TFT_RED);
+        lcd.drawString(
+            "UPDATE FAILED",
+            lcd.width() / 2,
+            lcd.height() / 2
+        );
+    });
+
+    ArduinoOTA.begin();
+
+    Serial.print("OTA ready at: ");
+    Serial.println(WiFi.localIP());
+}
 
 
 void setup()
@@ -61,7 +148,13 @@ void setup()
     else
     {
         setupWiFi();
+
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            setupOTA();
+        }
     }
+
 
     initWebAdmin();
     Serial.print("Admin IP: ");
@@ -76,6 +169,8 @@ void setup()
 
 void loop()
 {
+    ArduinoOTA.handle();
+
     static unsigned long lastHeartbeatCheck = 0;
     static bool lastMQTTState = false;
     static bool printerWasOnline = false;

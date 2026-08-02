@@ -32,6 +32,7 @@ unsigned long lastPrinterUpdate = 0;
 
 extern String subscribe_topic;
 extern String publish_topic;
+String request_topic;
 
 extern bool temperatureDisplayChanged;
 
@@ -58,6 +59,11 @@ TaskHandle_t mqttTaskHandle = nullptr;
 
 extern volatile bool displayWakeRequested;
 
+
+static bool waitingForGcodeState = false;
+static unsigned long mqttConnectedTime = 0;
+static unsigned long lastStatusRequestTime = 0;
+
 // --------------------------------------
 // CALLBACK
 // --------------------------------------
@@ -71,6 +77,9 @@ void callback(char* topic, byte* payload, unsigned int length)
     serializeJson(doc, Serial);
     Serial.println();
 
+
+
+
     if(error)
     {
         Serial.println("MQTT JSON ERROR");
@@ -83,6 +92,17 @@ void callback(char* topic, byte* payload, unsigned int length)
 
 
     JsonObject print = doc["print"];
+
+
+    if (print.containsKey("gcode_state"))
+    {
+        String receivedState =
+            print["gcode_state"].as<String>();
+
+        Serial.print("Received gcode_state: ");
+        Serial.println(receivedState);
+    }
+
 
     lastPrinterUpdate = millis();
 
@@ -675,7 +695,10 @@ void loopMQTT()
                 );
 
                 requestAMSUpdate();
-                request_status();
+
+                waitingForGcodeState = true;
+                mqttConnectedTime = millis();
+                lastStatusRequestTime = 0;
             }
             else
             {
@@ -688,20 +711,57 @@ void loopMQTT()
     }
 
     mqttClient.loop();
+
+    if (waitingForGcodeState)
+    {
+        const unsigned long now = millis();
+
+        if (
+            now - mqttConnectedTime >= 1000 &&
+            now - lastStatusRequestTime >= 3000
+        )
+        {
+            lastStatusRequestTime = now;
+
+            Serial.println("Requesting full printer status...");
+            request_status();
+        }
+    }
 }
 
 void request_status()
 {
-    String payload =
-    "{\"print\":{\"sequence_id\":\"0\",\"command\":\"pushall\"}}";
+    if (!mqttClient.connected())
+    {
+        return;
+    }
 
+    StaticJsonDocument<256> doc;
 
-    mqttClient.publish(
-        publish_topic.c_str(),
-        payload.c_str()
+    JsonObject pushing =
+        doc.createNestedObject("pushing");
+
+    pushing["sequence_id"] = "0";
+    pushing["command"] = "pushall";
+    pushing["version"] = 1;
+    pushing["push_target"] = 1;
+
+    String payload;
+    serializeJson(doc, payload);
+
+    bool published =
+        mqttClient.publish(
+            "device/01P00C632500950/request",
+            payload.c_str()
+        );
+
+    Serial.print("Pushall request: ");
+    Serial.println(
+        published ? "SENT" : "FAILED"
     );
 
-    Serial.println("Sent push_status");
+    Serial.print("Payload: ");
+    Serial.println(payload);
 }
 
 

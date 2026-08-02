@@ -286,10 +286,15 @@ static void drawExternalSpool(
     int y
 )
 {
+    bool spoolIsEmpty =
+        externalSpool.empty ||
+        externalSpool.type.length() == 0 ||
+        externalSpool.type == "Empty";
+
     uint16_t cardColor =
         TFT_DARKGREY;
 
-    if (!externalSpool.empty)
+    if (!spoolIsEmpty)
     {
         cardColor =
             hexTo565(
@@ -332,7 +337,7 @@ static void drawExternalSpool(
             : COLOR_BORDER
     );
 
-    uint16_t textColor =
+    const uint16_t textColor =
         getContrastTextColor(
             cardColor
         );
@@ -341,17 +346,16 @@ static void drawExternalSpool(
         middle_center
     );
 
-    lcd.setTextColor(
-        textColor
-    );
-
     lcd.setFont(
         &fonts::Font2
     );
 
-    // Filament type
-    if (externalSpool.empty)
+    if (spoolIsEmpty)
     {
+        lcd.setTextColor(
+            TFT_WHITE
+        );
+
         lcd.drawString(
             "EMPTY",
             x + AMS_CARD_WIDTH / 2,
@@ -360,6 +364,10 @@ static void drawExternalSpool(
     }
     else
     {
+        lcd.setTextColor(
+            textColor
+        );
+
         String filamentType =
             externalSpool.type;
 
@@ -379,13 +387,18 @@ static void drawExternalSpool(
         );
     }
 
+    lcd.setTextColor(
+        spoolIsEmpty
+            ? TFT_WHITE
+            : textColor
+    );
+
     lcd.drawString(
         "EXT",
         x + AMS_CARD_WIDTH / 2,
         y + 69
     );
 }
-
 
 // ----------------------------------------------------
 // Draw active PTFE tube and filament
