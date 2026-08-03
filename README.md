@@ -28,6 +28,8 @@ A custom ESP32-S3 touchscreen dashboard for monitoring and controlling a Bambu L
 
 ![System page](docs/images/system-page.jpg)
 
+![Admin web page](docs/images/admin_web_page.jpg)
+
 ## Flip Up Case
 
 ![Case1](docs/images/case1.jpg)
