@@ -40,3 +40,23 @@ See the complete [ESPHome Web installation instructions](INSTALLATION.md).
 ## Important
 
 This is an independent community project and is not affiliated with Bambu Lab.
+
+
+## License
+
+Copyright © 2026 Alan [Last Name].
+
+The source code and compiled firmware in this repository are licensed
+under the PolyForm Noncommercial License 1.0.0.
+
+Personal, hobby, educational, and other noncommercial use is permitted.
+
+Commercial use is not permitted without prior written permission from
+the copyright holder. This includes selling displays containing this
+firmware, selling modified versions, charging for copies, or including
+the software in a paid product.
+
+Commercial licensing inquiries: your-email@example.com
+
+Third-party libraries and components remain subject to their respective
+licenses.
