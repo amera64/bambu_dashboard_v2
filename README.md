@@ -28,6 +28,11 @@ A custom ESP32-S3 touchscreen dashboard for monitoring and controlling a Bambu L
 
 ![Case1](docs/images/case1.jpg)
 
+![Case2](docs/images/case2.jpg)
+
+![Case3](docs/images/case3.jpg)
+
+
 ## Installation
 
 See the complete [ESPHome Web installation instructions](INSTALLATION.md).
