@@ -4,6 +4,7 @@ A custom ESP32-S3 touchscreen dashboard for monitoring and controlling a Bambu L
 
 ## Features
 
+- Capacitive Touch Display
 - Live print progress
 - Printer status and current file
 - Nozzle, bed, and chamber temperatures
@@ -41,7 +42,7 @@ See the complete [ESPHome Web installation instructions](INSTALLATION.md).
 
 ## Required Hardware
 
-- Compatible 2.8-inch ESP32-S3 touchscreen display
+- [Freenove Capacitive Touch ESP32-S3 Display](https://www.amazon.com/dp/B0FSQF6FKN?th=1)
 - USB data cable
 - Bambu Lab P1S printer
 - Local network connection
