@@ -42,7 +42,7 @@ See the complete [ESPHome Web installation instructions](INSTALLATION.md).
 
 ## Required Hardware
 
-- [Freenove Capacitive Touch ESP32-S3 Display](https://www.amazon.com/dp/B0FSQF6FKN?th=1)
+- [Freenove Capacitive Touch ESP32-S3 Display](https://www.amazon.com/dp/B0FSQF6FKN?th=1) *** Only tested with this display ***
 - USB data cable
 - Bambu Lab P1S printer
 - Local network connection
