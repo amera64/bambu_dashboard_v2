@@ -7,14 +7,32 @@ assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+---
+name: Feature request
+about: Suggest an improvement or new capability for the Bambu Dashboard
+title: "[FEATURE] "
+labels: enhancement
+assignees: ''
+---
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+## Feature description
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+Describe the feature you would like added.
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+## Why would this be useful?
+
+Explain how this feature would improve the dashboard or solve a problem.
+
+## Suggested appearance or behavior
+
+Describe how you think the feature should work.
+
+## Printer and display information
+
+- Printer model:
+- Display model:
+- Firmware version:
+
+## Additional information
+
+Add screenshots, drawings, MQTT fields, links, or other details that may help.
