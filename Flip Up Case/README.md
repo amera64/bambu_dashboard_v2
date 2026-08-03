@@ -24,6 +24,14 @@ Editable STEP files are also included for users who want to customize the enclos
 
 Print both pieces with their largest flat surface against the build plate.
 
+## Parts Needed
+A USB-A to USB-B micro cable approxmately 200mm in length is ideal. I speculate that a cable as short as 150mm might just reach,
+and if the cable was longer, the enclosure has space to tuck in the excess.
+
+6 x M3 x 12mm countersunk bolts for attaching the rear to the front pieces.
+
+2 x M3 x 12mm bolts for attaching the enclosure to the adaptor.
+
 ## Assembly
 
 1. Insert the display into the front bezel.
