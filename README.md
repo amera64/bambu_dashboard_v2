@@ -16,6 +16,7 @@ A custom ESP32-S3 touchscreen dashboard for monitoring and controlling a Bambu L
 - Automatic screen sleep and wake
 - Web-based configuration
 - Arduino OTA firmware updates
+- Flip up display case that retains use of original screen
 
 ## Screenshots
 
