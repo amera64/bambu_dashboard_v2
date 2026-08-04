@@ -59,7 +59,7 @@ This project is available for personal and noncommercial use.
 Contributions are optional and help cover development hardware, test displays,
 prototype enclosures, and continued firmware improvements.
 
-[Support the Bambu P1S Dashboard on Ko-fi](https://ko-fi.com/bambup1sdashboard)
+[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/bambup1sdashboard)
 
 ## Important
 
