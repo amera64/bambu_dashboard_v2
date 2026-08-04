@@ -46,7 +46,7 @@ Connect your phone to:
 Bambu_P1S_Setup
 
 Then open:
-192.168.4.1
+192.168.4.1 (username: admin password: bambuupdate)
 
 The display temporarily disconnects from your home network and creates its own Wi-Fi setup network.
 
