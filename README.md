@@ -52,6 +52,15 @@ See the complete [ESPHome Web installation instructions](INSTALLATION.md).
 - Bambu Lab P1S printer
 - Local network connection
 
+## Support the Project
+
+This project is available for personal and noncommercial use.
+
+Contributions are optional and help cover development hardware, test displays,
+prototype enclosures, and continued firmware improvements.
+
+[Support the Bambu P1S Dashboard on Ko-fi](https://ko-fi.com/bambup1sdashboard)
+
 ## Important
 
 This is an independent community project and is not affiliated with Bambu Lab.
@@ -75,3 +84,6 @@ Commercial licensing inquiries: your-email@example.com
 
 Third-party libraries and components remain subject to their respective
 licenses.
+
+
+
