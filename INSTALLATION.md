@@ -24,7 +24,12 @@ Have the following information available:
 1. Your home Wi-Fi network name
 2. Your Wi-Fi password
 3. Your Bambu Lab P1S printer’s IP address
-4. A phone, tablet, or computer with Wi-Fi
+   ## Finding the Printer IP Address
+   The printer IP address can be found on the Bambu Lab P1S touchscreen:
+   Open the printer’s settings. Open the network or LAN information page. Locate the printer’s IP address.
+   The display and printer must normally be connected to the same local network.
+   
+5. A phone, tablet, or computer with Wi-Fi
 
 The ESP32-S3 display connects to 2.4 GHz Wi-Fi. Make sure your network provides a 2.4 GHz connection.
 
