@@ -24,6 +24,7 @@ Have the following information available:
 1. Your home Wi-Fi network name
 2. Your Wi-Fi password
 3. Your Bambu Lab P1S printer’s IP address
+   
    Finding the Printer IP Address
    The printer IP address can be found on the Bambu Lab P1S touchscreen:
    Open the printer’s settings. Open the network or LAN information page. Locate the printer’s IP address.
