@@ -16,7 +16,7 @@ A custom ESP32-S3 touchscreen dashboard for monitoring and controlling a Bambu L
 - Automatic screen sleep and wake
 - Web-based configuration
 - Arduino OTA firmware updates
-- Flip up display case that retains use of original screen
+- Flip up display enclosure that retains use of original screen
 
 ## Screenshots
 
@@ -27,6 +27,8 @@ A custom ESP32-S3 touchscreen dashboard for monitoring and controlling a Bambu L
 ![Temperature page](docs/images/temperature-page.jpg)
 
 ![System page](docs/images/system-page.jpg)
+
+## Web Admin Page
 
 ![Admin web page](docs/images/admin_web_page.jpg)
 
@@ -49,6 +51,15 @@ See the complete [ESPHome Web installation instructions](INSTALLATION.md).
 - USB data cable
 - Bambu Lab P1S printer
 - Local network connection
+
+## Support the Project
+
+This project is available for personal and noncommercial use.
+
+Contributions are optional and help cover development hardware, test displays,
+prototype enclosures, and continued firmware improvements.
+
+[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/bambup1sdashboard)
 
 ## Important
 
@@ -73,3 +84,6 @@ Commercial licensing inquiries: your-email@example.com
 
 Third-party libraries and components remain subject to their respective
 licenses.
+
+
+
