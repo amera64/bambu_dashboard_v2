@@ -48,11 +48,11 @@ const char* mqtt_server = "192.168.1.215";
 const int mqtt_port = 8883;
 
 const char* mqttUser = "bblp";
-const char* mqttPassword = "c53eae0a";
+const char* mqttPassword = "PRINTER ACCESS CODE";
 
 const char* mqttTopic = "device/XXXX/report";
 
-const char* printer_serial = "01P00C632500950";  // Your P1S Printer Serial Number
+const char* printer_serial = "YOUR PRINTER SERIAL NUM";  // Your P1S Printer Serial Number
 
 
 TaskHandle_t mqttTaskHandle = nullptr;
