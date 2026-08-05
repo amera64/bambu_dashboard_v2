@@ -4,6 +4,7 @@
 #include <Update.h>
 
 #include "WebAdmin.h"
+#include "Settings.h"
 
 WebServer webAdminServer(80);
 
@@ -12,6 +13,53 @@ static const char* ADMIN_PASSWORD = "bambuupdate";
 
 static bool rebootPending = false;
 static unsigned long rebootRequestTime = 0;
+
+// ----------------------------------------------------
+// Escape text before inserting it into HTML
+// ----------------------------------------------------
+
+static String htmlEscape(const String& input)
+{
+    String output;
+
+    output.reserve(
+        input.length() + 16
+    );
+
+    for (size_t i = 0; i < input.length(); i++)
+    {
+        char character = input.charAt(i);
+
+        switch (character)
+        {
+            case '&':
+                output += "&amp;";
+                break;
+
+            case '<':
+                output += "&lt;";
+                break;
+
+            case '>':
+                output += "&gt;";
+                break;
+
+            case '"':
+                output += "&quot;";
+                break;
+
+            case '\'':
+                output += "&#39;";
+                break;
+
+            default:
+                output += character;
+                break;
+        }
+    }
+
+    return output;
+}
 
 
 // ----------------------------------------------------
@@ -82,7 +130,7 @@ static void handleAdminPage()
 
     String page;
 
-    page.reserve(6000);
+    page.reserve(8500);
 
     page += R"rawliteral(
 <!DOCTYPE html>
@@ -152,6 +200,39 @@ static void handleAdminPage()
             margin: 0;
         }
 
+        .field-label {
+            display: block;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            color: #d0d0d0;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #4a4a4a;
+            border-radius: 7px;
+            background: #181818;
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #008f62;
+        }
+
+        .help {
+            margin-top: 8px;
+            color: #aaaaaa;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
         button {
             width: 100%;
             padding: 14px;
@@ -161,6 +242,10 @@ static void handleAdminPage()
             color: white;
             font-size: 17px;
             cursor: pointer;
+        }
+
+        .save-button {
+            background: #2676bd;
         }
 
         .update-button {
@@ -258,6 +343,88 @@ static void handleAdminPage()
     </div>
 
     <div class="card">
+        <h2>Printer Settings</h2>
+
+        <form method="POST"
+              action="/save-printer">
+
+            <label class="field-label"
+                   for="printer_ip">
+                Printer IP Address
+            </label>
+
+            <input id="printer_ip"
+                   type="text"
+                   name="printer_ip"
+                   value=")rawliteral";
+
+    page += htmlEscape(printerIP);
+
+    page += R"rawliteral("
+                   maxlength="45"
+                   autocapitalize="off"
+                   autocomplete="off"
+                   spellcheck="false"
+                   required>
+
+            <label class="field-label"
+                   for="printer_serial">
+                Printer Serial Number
+            </label>
+
+            <input id="printer_serial"
+                   type="text"
+                   name="printer_serial"
+                   value=")rawliteral";
+
+    page += htmlEscape(printerSerial);
+
+    page += R"rawliteral("
+                   maxlength="40"
+                   autocapitalize="characters"
+                   autocomplete="off"
+                   spellcheck="false"
+                   required>
+
+            <label class="field-label"
+                   for="access_code">
+                LAN Access Code
+            </label>
+
+            <input id="access_code"
+                   type="password"
+                   name="access_code"
+                   maxlength="64"
+                   autocomplete="new-password"
+                   placeholder="Leave blank to keep the current code">
+
+            <p class="help">
+                Access-code status:
+                <strong>
+)rawliteral";
+
+    page +=
+        printerAccessCode.length() > 0
+            ? "Configured"
+            : "Not configured";
+
+    page += R"rawliteral(
+                </strong>
+                <br>
+                The LAN access code is used as the printer's
+                MQTT password. Leave this field blank to retain
+                the currently saved code.
+            </p>
+
+            <button class="save-button"
+                    type="submit">
+                Save Printer Settings
+            </button>
+
+        </form>
+    </div>
+
+    <div class="card">
         <h2>Firmware</h2>
 
         <button class="update-button"
@@ -299,6 +466,179 @@ static void handleAdminPage()
     );
 }
 
+
+// ----------------------------------------------------
+// Save printer settings
+// ----------------------------------------------------
+
+static void handleSavePrinterSettings()
+{
+    if (!authenticateAdmin())
+    {
+        return;
+    }
+
+    if (!webAdminServer.hasArg("printer_ip") ||
+        !webAdminServer.hasArg("printer_serial"))
+    {
+        webAdminServer.send(
+            400,
+            "text/plain",
+            "Missing printer settings."
+        );
+
+        return;
+    }
+
+    String newPrinterIP =
+        webAdminServer.arg("printer_ip");
+
+    String newPrinterSerial =
+        webAdminServer.arg("printer_serial");
+
+    String newAccessCode =
+        webAdminServer.hasArg("access_code")
+            ? webAdminServer.arg("access_code")
+            : "";
+
+    newPrinterIP.trim();
+    newPrinterSerial.trim();
+    newAccessCode.trim();
+
+    newPrinterSerial.toUpperCase();
+
+
+    // Validate printer IP address.
+    IPAddress parsedAddress;
+
+    if (!parsedAddress.fromString(newPrinterIP))
+    {
+        webAdminServer.send(
+            400,
+            "text/plain",
+            "The printer IP address is not valid."
+        );
+
+        return;
+    }
+
+
+    if (newPrinterSerial.length() == 0)
+    {
+        webAdminServer.send(
+            400,
+            "text/plain",
+            "The printer serial number is required."
+        );
+
+        return;
+    }
+
+
+    // A code is required when no code has previously been saved.
+    if (newAccessCode.length() == 0 &&
+        printerAccessCode.length() == 0)
+    {
+        webAdminServer.send(
+            400,
+            "text/plain",
+            "The LAN access code is required."
+        );
+
+        return;
+    }
+
+
+    printerIP = newPrinterIP;
+    printerSerial = newPrinterSerial;
+
+    // A blank field means retain the existing code.
+    if (newAccessCode.length() > 0)
+    {
+        printerAccessCode = newAccessCode;
+    }
+
+
+    saveSettings();
+
+
+    Serial.println();
+    Serial.println("Printer settings updated from WebAdmin");
+
+    Serial.print("Printer IP: ");
+    Serial.println(printerIP);
+
+    Serial.print("Printer serial: ");
+    Serial.println(printerSerial);
+
+    Serial.println("LAN access code: (configured)");
+
+
+    webAdminServer.send(
+        200,
+        "text/html",
+        R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Printer Settings Saved</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            background: #151515;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .card {
+            max-width: 440px;
+            margin: 40px auto;
+            padding: 24px;
+            background: #242424;
+            border-radius: 12px;
+        }
+
+        .success {
+            color: #44d69a;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2 class="success">
+        Printer settings saved
+    </h2>
+
+    <p>
+        The display is restarting and will connect
+        using the new printer settings.
+    </p>
+
+    <p>
+        Wait approximately 10 seconds, then reopen
+        the administration page.
+    </p>
+</div>
+
+</body>
+</html>
+)rawliteral"
+    );
+
+
+    rebootPending = true;
+    rebootRequestTime = millis();
+}
 
 // ----------------------------------------------------
 // Firmware update page
@@ -765,6 +1105,12 @@ void initWebAdmin()
     );
 
     webAdminServer.on(
+    "/save-printer",
+    HTTP_POST,
+    handleSavePrinterSettings
+    );
+
+    webAdminServer.on(
         "/update",
         HTTP_GET,
         handleUpdatePage
@@ -806,6 +1152,18 @@ void initWebAdmin()
     Serial.println(
         WiFi.localIP()
     );
+}
+
+// ----------------------------------------------------
+// Stop web administration server
+// ----------------------------------------------------
+
+void stopWebAdmin()
+{
+    webAdminServer.stop();
+
+    Serial.println();
+    Serial.println("WebAdmin stopped.");
 }
 
 

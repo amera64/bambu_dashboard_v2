@@ -169,17 +169,26 @@ void setup()
 
 void loop()
 {
-    ArduinoOTA.handle();
+
 
     static unsigned long lastHeartbeatCheck = 0;
     static bool lastMQTTState = false;
     static bool printerWasOnline = false;
 
     // Web server, touch, and display stay on the Arduino loop
-    updateWebAdmin();
+    if (wifiSetupActive)
+    {
+        handleWiFiServer();
+    }
+    else
+    {
+        updateWebAdmin();
+    }
+
+    ArduinoOTA.handle();
     updateSleepManager();
     handleTouch();
-    handleWiFiServer();
+  
 
     if (displayWakeRequested)
     {

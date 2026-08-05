@@ -1,9 +1,9 @@
 
 #include <WiFi.h>
 #include <WebServer.h>
-
 #include "WiFiSetup.h"
 #include "Settings.h"
+#include "WebAdmin.h"
 
 
 bool wifiSetupActive = false;
@@ -49,19 +49,85 @@ void setupWiFi()
 
 void startWiFiSetup()
 {
+    // Prevent starting setup twice
+    if (wifiSetupActive)
+    {
+        return;
+    }
+
     wifiSetupActive = true;
-    Serial.println("Starting AP...");
 
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP("Bambu_P1S_Setup");
+    Serial.println();
+    Serial.println("Starting WiFi setup mode...");
 
-    Serial.println("Scanning networks...");
-    buildWiFiList();      // <-- Perform the scan once here
+    // Free port 80 currently used by WebAdmin
+    stopWebAdmin();
 
-    server.on("/", handleWiFiPage);
-    server.on("/save", HTTP_POST, handleWiFiSave);
+    delay(100);
+
+    // Stop the setup server in case it was previously started
+    server.stop();
+
+    /*
+     * AP+STA mode permits the ESP32 to create its setup access point
+     * while also allowing Wi-Fi network scanning.
+     */
+    WiFi.mode(WIFI_AP_STA);
+
+    bool accessPointStarted =
+        WiFi.softAP("Bambu_P1S_Setup");
+
+    if (!accessPointStarted)
+    {
+        Serial.println(
+            "ERROR: Unable to start setup access point."
+        );
+
+        return;
+    }
+
+    Serial.println("Setup access point started.");
+    Serial.print("Network: ");
+    Serial.println("Bambu_P1S_Setup");
+
+    Serial.print("Setup address: http://");
+    Serial.println(WiFi.softAPIP());
+
+    Serial.println("Scanning for WiFi networks...");
+
+    buildWiFiList();
+
+    // Wi-Fi setup routes
+    server.on(
+        "/",
+        HTTP_GET,
+        handleWiFiPage
+    );
+
+    server.on(
+        "/save",
+        HTTP_POST,
+        handleWiFiSave
+    );
+
+    server.onNotFound([]()
+    {
+        server.sendHeader(
+            "Location",
+            "/",
+            true
+        );
+
+        server.send(
+            302,
+            "text/plain",
+            ""
+        );
+    });
 
     server.begin();
+
+    Serial.println("WiFi setup web server started.");
 }
 
 //
@@ -249,13 +315,11 @@ void handleWiFiSave()
 
 void handleWiFiServer()
 {
+    if (wifiSetupActive)
     {
-
         server.handleClient();
     }
-    server.handleClient();
 }
-
 
 
 void restartAfterWiFiSave()

@@ -1,5 +1,6 @@
 #include "MQTT.h"
 #include "PrinterData.h"
+#include "Settings.h"
 #include "UI.h"
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
@@ -42,17 +43,25 @@ PubSubClient mqttClient(secureClient);
 extern int currentPage;
 extern bool pageChanged;
 
-// --- Bambu Cloud MQTT Broker Settings ---
-// CHANGE THESE TO YOUR P1S SETTINGS
-const char* mqtt_server = "192.168.1.215";
-const int mqtt_port = 8883;
+// ----------------------------------------------------
+// Bambu LAN MQTT settings
+// ----------------------------------------------------
 
-const char* mqttUser = "bblp";
-const char* mqttPassword = "c53eae0a";
+static constexpr uint16_t MQTT_PORT = 8883;
+static constexpr const char* MQTT_USER = "bblp";
 
-const char* mqttTopic = "device/XXXX/report";
 
-const char* printer_serial = "01P00C632500950";  // Your P1S Printer Serial Number
+// ----------------------------------------------------
+// Verify required printer settings
+// ----------------------------------------------------
+
+static bool mqttSettingsReady()
+{
+    return
+        printerIP.length() > 0 &&
+        printerSerial.length() > 0 &&
+        printerAccessCode.length() > 0;
+}
 
 
 TaskHandle_t mqttTaskHandle = nullptr;
@@ -632,15 +641,47 @@ void callback(char* topic, byte* payload, unsigned int length)
 
 void setupMQTT()
 {
+    if (!mqttSettingsReady())
+    {
+        Serial.println();
+        Serial.println(
+            "MQTT setup skipped: printer settings are incomplete."
+        );
+
+        Serial.print("Printer IP: ");
+        Serial.println(
+            printerIP.length() > 0
+                ? printerIP
+                : "(missing)"
+        );
+
+        Serial.print("Printer serial: ");
+        Serial.println(
+            printerSerial.length() > 0
+                ? printerSerial
+                : "(missing)"
+        );
+
+        Serial.print("LAN access code: ");
+        Serial.println(
+            printerAccessCode.length() > 0
+                ? "(configured)"
+                : "(missing)"
+        );
+
+        systemStatus.mqttConnected = false;
+        return;
+    }
+
     secureClient.setInsecure();
 
-    // Limit the time spent attempting an unavailable connection
+    // Limit time spent attempting an unavailable connection.
     secureClient.setTimeout(2000);
     mqttClient.setSocketTimeout(2);
 
     mqttClient.setServer(
-        mqtt_server,
-        mqtt_port
+        printerIP.c_str(),
+        MQTT_PORT
     );
 
     mqttClient.setCallback(callback);
@@ -648,19 +689,39 @@ void setupMQTT()
     mqttClient.setKeepAlive(60);
 
     subscribe_topic =
-        "device/" + String(printer_serial) + "/report";
+        "device/" +
+        printerSerial +
+        "/report";
 
     publish_topic =
-        "device/" + String(printer_serial) + "/request";
+        "device/" +
+        printerSerial +
+        "/request";
+
+    Serial.println();
+    Serial.println("MQTT setup complete");
+
+    Serial.print("MQTT server: ");
+    Serial.println(printerIP);
+
+    Serial.print("Printer serial: ");
+    Serial.println(printerSerial);
 
     Serial.print("Subscribe topic: ");
     Serial.println(subscribe_topic);
 
-    Serial.println("MQTT setup complete");
+    Serial.print("Publish topic: ");
+    Serial.println(publish_topic);
 }
 
 void loopMQTT()
 {
+    if (!mqttSettingsReady())
+    {
+        systemStatus.mqttConnected = false;
+        return;
+    }
+
     static unsigned long lastReconnect = 0;
 
     const unsigned long reconnectInterval = 30000;
@@ -679,9 +740,10 @@ void loopMQTT()
 
             if (mqttClient.connect(
                     clientId.c_str(),
-                    mqttUser,
-                    mqttPassword))
-            {
+                    MQTT_USER,
+                    printerAccessCode.c_str()))
+        {
+
                 Serial.println("MQTT connected");
 
                 bool subscribed =
@@ -736,6 +798,15 @@ void request_status()
         return;
     }
 
+    if (publish_topic.length() == 0)
+    {
+        Serial.println(
+            "Pushall request skipped: publish topic is empty."
+        );
+
+        return;
+    }
+
     StaticJsonDocument<256> doc;
 
     JsonObject pushing =
@@ -751,19 +822,23 @@ void request_status()
 
     bool published =
         mqttClient.publish(
-            "device/01P00C632500950/request",
+            publish_topic.c_str(),
             payload.c_str()
         );
 
     Serial.print("Pushall request: ");
     Serial.println(
-        published ? "SENT" : "FAILED"
+        published
+            ? "SENT"
+            : "FAILED"
     );
+
+    Serial.print("Publish topic: ");
+    Serial.println(publish_topic);
 
     Serial.print("Payload: ");
     Serial.println(payload);
 }
-
 
 void pausePrint()
 {
@@ -886,7 +961,18 @@ void mqttTask(void* parameter)
     for (;;)
     {
 
+        // Do not attempt MQTT until all printer
+        // settings have been configured.
+        if (!mqttSettingsReady())
+        {
+            systemStatus.mqttConnected = false;
 
+            vTaskDelay(
+                pdMS_TO_TICKS(1000)
+            );
+
+            continue;
+        }
         // Do not attempt MQTT without Wi-Fi
         if (WiFi.status() != WL_CONNECTED)
         {
@@ -929,8 +1015,8 @@ void mqttTask(void* parameter)
                 bool connected =
                     mqttClient.connect(
                         clientId.c_str(),
-                        mqttUser,
-                        mqttPassword
+                        MQTT_USER,
+                        printerAccessCode.c_str()
                     );
 
                 Serial.println(
